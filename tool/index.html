@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantViz · Specimetrics</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tool.css">
+</head>
+<body>
+<div id="lock">
+  <form id="lockForm">
+    <div class="k"><a href="../">PlantViz</a> · Tool</div>
+    <h1>Specimetrics</h1>
+    <p class="sub">Example specimens — grass challenges and plants never seen in training — with three models. Enter the PlantViz passphrase.</p>
+    <input id="pass" type="password" placeholder="Passphrase" autocomplete="current-password" autofocus>
+    <label class="rem"><input type="checkbox" id="remember"> Remember on this browser for 30 days</label>
+    <button id="unlockBtn">Unlock</button>
+    <div id="lockErr"></div>
+  </form>
+</div>
+
+<canvas id="c"></canvas>
+
+<div class="hud tl">
+  <div class="rowx"><span class="k">Example</span><span class="grow"></span>
+    <button id="prev" class="ghost" title="Previous (←)">‹</button><span class="sub" id="count"></span><button id="next" class="ghost" title="Next (→)">›</button></div>
+  <select id="example"></select>
+  <div class="challenge" id="why"></div>
+  <div class="species" id="species">—</div>
+  <div class="sub" id="meta"></div>
+  <div class="sub" id="links"></div>
+  <div class="rowx ann"><span class="k">Annotator</span><select id="annSel" title="Who is annotating: versions are saved per annotator"></select><button class="small" id="annEdit" title="Edit role / expertise">Edit</button></div>
+</div>
+
+<div class="hud tr">
+  <div class="k">Model</div>
+  <div class="seg models" id="models"></div>
+  <div class="card" id="card"></div>
+  <div class="k gap">This sheet</div>
+  <div class="sub" id="runInfo"></div>
+  <div class="sub" id="scaleInfo"></div>
+</div>
+
+<div class="hud left" id="tools">
+  <button data-tool="select" title="Select & move points (V)">Edit<i>V</i></button>
+  <button data-tool="blade" title="Draw blade, ligule → tip (B)">Blade<i>B</i></button>
+  <button data-tool="culm" title="Draw culm, base → inflorescence (C)">Culm<i>C</i></button>
+  <button data-tool="blade_width" title="Blade width line (W)">Width<i>W</i></button>
+  <button data-tool="culm_width" title="Culm diameter line (D)">Diam.<i>D</i></button>
+  <button data-tool="spine" title="Spine: click along the midline, Enter to finish; widths measured across it (T)">Spine<i>T</i></button>
+  <span class="hr"></span>
+  <button id="saveBtn" title="Save corrections in this browser (Ctrl S)">Save</button>
+  <button id="resetBtn" title="Discard corrections, back to the model">Reset</button>
+  <button id="dlBtn" title="Download all saved corrections as a file">Export</button>
+</div>
+
+<div class="hud right" id="panel">
+  <div id="verBox"></div>
+  <div id="spineBox" hidden></div>
+  <div id="keyBox" hidden></div>
+  <div class="k" id="traitTitle">All traits</div>
+  <div class="big" id="traitBig"></div>
+  <div class="sub" id="traitSub"></div>
+  <canvas id="chart" width="480" height="70"></canvas>
+  <div id="list"></div>
+</div>
+
+<div class="hud bottom" id="traits"></div>
+<div class="hud bl"><div class="seg view" id="views"></div><div class="seg view" id="overlay" title="Measurement lines: key organs / all / off (O)"></div><span id="zoom"></span></div>
+<div class="hud br"><span id="status"></span><span id="who" title="Active annotator profile"></span><a href="../slides/" id="toSlides" title="Back to the slides">Slides</a><a href="#" id="lockBtn">Lock</a></div>
+<div id="toast"></div>
+
+<div id="help" hidden>
+  <div class="k">Controls</div>
+  <table>
+    <tr><td>Scroll · Drag</td><td>zoom at cursor · pan</td></tr>
+    <tr><td>1 – 6 · P</td><td>trait tabs · cycle view (photo, plant only, mask, depth, training label — when available)</td></tr>
+    <tr><td>M</td><td>next model</td></tr>
+    <tr><td>O · Lines (bottom left)</td><td>measurement lines: Key (a few clearly visible organs + their width lines; default) · All · Off (select from the list)</td></tr>
+    <tr><td>★ · Key organs − / +</td><td>pin / exclude an organ as key (saved with your version) · how many key blades / culms (1–8); Auto clears pins</td></tr>
+    <tr><td>V B C W D</td><td>edit · draw blade · culm · width · diameter</td></tr>
+    <tr><td>T</td><td>spine: click along the midline of any leaf, culm or shoot, Enter to finish; widths measured across it</td></tr>
+    <tr><td>+ / − · R</td><td>more / fewer spine cross-sections (spine selected) · ribbon view on / off</td></tr>
+    <tr><td>Click a spine vertex · K</td><td>mark / unmark a fold (crease) there; with no vertex picked, K accepts the suggested folds (red rings “fold?”, also accepted by a click)</td></tr>
+    <tr><td>Drag a round handle</td><td>set a spine cross-section width by hand</td></tr>
+    <tr><td>Annotator (top left)</td><td>choose or create a profile; versions are saved per annotator; evaluators compare A / B and score</td></tr>
+    <tr><td>Click · Enter / dbl-click</td><td>add point · finish line</td></tr>
+    <tr><td>Drag a square handle</td><td>move a point (Edit)</td></tr>
+    <tr><td>Delete · Ctrl Z · Esc</td><td>delete selected · undo · cancel</td></tr>
+    <tr><td>Ctrl S</td><td>save corrections in this browser</td></tr>
+    <tr><td>F · 0 · ← →</td><td>fit · 100 % · previous / next example</td></tr>
+  </table>
+</div>
+<div id="annModal" hidden>
+  <form id="annForm">
+    <div class="k">Annotator profile</div>
+    <input id="annName" placeholder="Name" maxlength="40" autocomplete="off">
+    <div class="k gap">Role</div>
+    <div class="seg" id="annRole"><button type="button" data-v="Annotator">Annotator</button><button type="button" data-v="Evaluator">Evaluator</button></div>
+    <div class="k gap">Expertise</div>
+    <div class="seg" id="annExp"><button type="button" data-v="Novice">Novice</button><button type="button" data-v="Intermediate">Intermediate</button><button type="button" data-v="Expert">Expert</button></div>
+    <div class="sub" id="annNote"></div>
+    <div class="rowx end gap"><button type="button" id="annCancel">Cancel</button><button id="annOk">Use profile</button></div>
+  </form>
+</div>
+<script src="smart.js"></script>
+<script src="annotators.js"></script>
+<script src="spine.js"></script>
+<script src="represent.js"></script>
+<script src="tool.js"></script>
+</body>
+</html>
