@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantViz · slides</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; background: #000; color: #eaeaea; font: 14px/1.5 Inter, system-ui, sans-serif; }
+  #loading { max-width: 380px; margin: 30vh auto 0; padding: 0 28px; color: #888; }
+  #loading .bar { height: 2px; background: #222; margin-top: 12px; overflow: hidden; }
+  #loading .bar i { display: block; height: 100%; width: 0; background: #8b93ff; transition: width .2s; }
+</style>
+</head>
+<body>
+<div id="gate" hidden></div>
+<div id="loading" hidden><div id="msg">Loading slides…</div><div class="bar"><i id="pct"></i></div></div>
+<script src="../assets/auth.js"></script>
+<script>
+"use strict";
+(async function () {
+  await PV.signIn(document.getElementById("gate"), { title: "Slides", what: "the slides" });
+  const box = document.getElementById("loading"), msg = document.getElementById("msg"), pct = document.getElementById("pct");
+  box.hidden = false;
+  try {
+    const c = await PV.content();
+    const r = await fetch(c.url("slides/index.html"), { cache: "no-cache" });
+    if (!r.ok) throw new Error(`Slides unavailable (${r.status})`);
+    // stream with progress: the deck has its figures inlined (~20 MB)
+    const total = +r.headers.get("content-length") || 0, reader = r.body.getReader(), parts = [];
+    let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; if (total) pct.style.width = `${(100 * got / total).toFixed(0)}%`; }
+    const html = await new Blob(parts).text();
+    document.open(); document.write(html); document.close();
+  } catch (e) {
+    if (e.status === 401) return location.reload();
+    msg.textContent = e.message || "Could not load the slides.";
+  }
+})();
+</script>
+</body>
+</html>
